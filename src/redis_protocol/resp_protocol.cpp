@@ -81,9 +81,51 @@ EncodeDecodeResult decode_bulk_string(const std::string bulk_string_to_decode, s
     }
 
     // Verify string is a bulk string
+    if (bulk_string_to_decode[0] != '$') {
+        debug_print("%c is different than $", bulk_string_to_decode[0]);
+        return PARSE_ERROR;
+    }
 
     // Then, let's get the string size. (first part of the packet.)
     std::string first_part;
+    std::string len_str;
+    int i;
+    for (i = 1; i < packet_size - 2; i++) {
+        first_part += bulk_string_to_decode[i];
+
+        if (first_part.size() > 1 &&
+            first_part[first_part.size() - 1] == '\n' &&
+            first_part[first_part.size() - 2] == '\r') {
+            len_str = first_part.substr(0, first_part.size() - 2);
+            break;
+        }
+    }
+
+    // Is it an integer ?
+    try {
+        int bulk_str_size = std::stoi(len_str);
+
+        // Now, check the size of bulk string is valid. Should be bulk_str_size
+        // + 2 (because of last /r/n)
+        if (packet_size != i + bulk_str_size + 3) {
+            debug_print("Wrong size for bulk string packet: %d\n", i + bulk_str_size + 3);
+            return PARSE_ERROR;
+        } else if (bulk_string_to_decode[packet_size - 2] != '\r' ||
+                   bulk_string_to_decode[packet_size - 1] != '\n') {
+            debug_print("%s", "Packet does not finish by \\r\\n");
+            return PARSE_ERROR;
+        }
+
+        // Should be ok now.
+        result = bulk_string_to_decode.substr(i + 1, bulk_str_size + 1);
+        return OK;
+    } catch (std::invalid_argument &invalid_arg) {
+        debug_print("Error in decode_bulk_string: %s - %s \n", invalid_arg.what(), len_str.c_str());
+        return PARSE_ERROR;
+    } catch (std::out_of_range &oor) {
+        debug_print("Out of range in decode_bulk_string: %s\n", oor.what());
+        return PARSE_ERROR;
+    }
 
     return OK;
 }

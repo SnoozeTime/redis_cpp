@@ -17,10 +17,16 @@ using boost::asio::ip::tcp;
 
 int main()
 {
-    std::string lol = ":q\r\n";
-    int i;
-    if (rediscpp::protocol::decode_integer(lol, i) == rediscpp::protocol::OK) {
-        std::cout << lol << std::endl;
+    std::string lol = "this is a string";
+    std::string packet;
+
+    rediscpp::protocol::encode_bulk_string(lol, packet);
+    std::cout << packet << std::endl;
+    std::cout << "---------------------\n";
+
+    std::string lol2;
+    if (rediscpp::protocol::decode_bulk_string(packet, lol2) == rediscpp::protocol::OK) {
+        std::cout << lol2 << std::endl;
     } else {
         std::cerr << "Something wrong happened\n";
     }
