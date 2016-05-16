@@ -13,6 +13,8 @@ else()
     C++11 support. Please use a different C++ compiler.")
 endif()
 
+
+
 # -------------------------------------------
 # Include directories
 # -------------------------------------------
@@ -22,16 +24,18 @@ include_directories(include)
 # -------------------------------------------
 # Source files
 # -------------------------------------------
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp" "src/redis_protocol/*.cpp")
 file(GLOB EXAMPLE_SOURCES "examples/*.cpp")
 
 # -------------------------------------------
 # Dependencies
 # -------------------------------------------
-set(DEPENDENCIES hiredis jsoncpp)
+set(DEPENDENCIES boost_system pthread)
 
 add_library(rediscpp SHARED ${SOURCES})
 add_executable(example ${EXAMPLE_SOURCES})
+
+target_compile_definitions(rediscpp PRIVATE DEBUG=1)
 
 target_link_libraries(rediscpp ${DEPENDENCIES})
 target_link_libraries(example rediscpp)
