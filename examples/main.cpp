@@ -15,21 +15,99 @@ using boost::asio::ip::tcp;
 
 #include "redis_protocol/resp_protocol.hpp"
 
+rediscpp::protocol::RedisReplyPtr get_reply()
+{
+    rediscpp::protocol::RedisReplyPtr reply = rediscpp::protocol::RedisReplyPtr(new rediscpp::protocol::RedisReply());
+    reply->type = rediscpp::protocol::ARRAY;
+
+    rediscpp::protocol::RedisReplyPtr reply2 = rediscpp::protocol::RedisReplyPtr(new rediscpp::protocol::RedisReply());
+    reply2->type = rediscpp::protocol::BULK_STRING;
+    reply2->string_value = "hahaha";
+
+    rediscpp::protocol::RedisReplyPtr reply3 = rediscpp::protocol::RedisReplyPtr(new rediscpp::protocol::RedisReply());
+    reply3->type = rediscpp::protocol::BULK_STRING;
+    reply3->string_value = "hahaha";
+
+    rediscpp::protocol::RedisReplyPtr reply4 = rediscpp::protocol::RedisReplyPtr(new rediscpp::protocol::RedisReply());
+    reply4->type = rediscpp::protocol::INTEGER;
+    reply4->integer_value = 5;
+
+    reply->AddElementToArray(reply2);
+    reply->AddElementToArray(reply3);
+    reply->AddElementToArray(reply4);
+
+
+    return reply;
+}
+
 int main()
 {
-    std::string lol = "this is a string";
-    std::string packet;
+    //rediscpp::protocol::RedisReplyPtr reply = get_reply();
+    //rediscpp::protocol::RedisReplyPtr reply = rediscpp::protocol::ParseReply("+OK\r\n");
 
-    rediscpp::protocol::encode_bulk_string(lol, packet);
-    std::cout << packet << std::endl;
-    std::cout << "---------------------\n";
+    //std::cout << reply->string_value << std::endl;
+    std::string array_str = "*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n";
 
-    std::string lol2;
-    if (rediscpp::protocol::decode_bulk_string(packet, lol2) == rediscpp::protocol::OK) {
-        std::cout << lol2 << std::endl;
-    } else {
-        std::cerr << "Something wrong happened\n";
+    auto array = make_unique<rediscpp::protocol::RedisReply>();
+    DecodeArray(array_str, array.get());
+    std::cout << array->string_value << std::endl;
+    for (auto& el : array->elements) {
+        switch (el->type) {
+            case rediscpp::protocol::INTEGER:
+                std::cout << "Value is integer: " << el->integer_value << std::endl;
+                break;
+            case rediscpp::protocol::BULK_STRING:
+                std::cout << "Value is bulk string: " << el->string_value << std::endl;
+                break;
+            case rediscpp::protocol::SIMPLE_STRING:
+                std::cout << "Value is bulk string: " << el->string_value << std::endl;
+                break;
+            case rediscpp::protocol::ERROR:
+                std::cout << "Error " << el->string_value << std::endl;
+            case rediscpp::protocol::ARRAY:
+                std::cout << "Value is array\n";
+                for (auto& el2 : el->elements) {
+                    switch (el2->type) {
+                        case rediscpp::protocol::INTEGER:
+                            std::cout << "Value is integer: " << el2->integer_value << std::endl;
+                            break;
+                        case rediscpp::protocol::BULK_STRING:
+                            std::cout << "Value is bulk string: " << el2->string_value << std::endl;
+                            break;
+                        case rediscpp::protocol::SIMPLE_STRING:
+                            std::cout << "Value is bulk string: " << el2->string_value << std::endl;
+                            break;
+                        case rediscpp::protocol::ERROR:
+                            std::cout << "Error " << el2->string_value << std::endl;
+                        case rediscpp::protocol::ARRAY:
+                            std::cout << "Value is array\n";
+                            break;
+                        default:
+                        break;
+                    }
+                }
+                break;
+            default:
+            break;
+        }
     }
+
+
+    // reply1.redis_array.push_back(reply2);
+    // reply1.redis_array.push_back(reply3);
+    // std::string lol = "this is a string";
+    // std::string packet;
+    //
+    // rediscpp::protocol::encode_bulk_string(lol, packet);
+    // std::cout << packet << std::endl;
+    // std::cout << "---------------------\n";
+    //
+    // std::string lol2;
+    // if (rediscpp::protocol::decode_bulk_string(packet, lol2) == rediscpp::protocol::OK) {
+    //     std::cout << lol2 << std::endl;
+    // } else {
+    //     std::cerr << "Something wrong happened\n";
+    // }
     // std::vector<std::string> haha;
     // haha.push_back("LPUSH");
     // haha.push_back("mylist");
