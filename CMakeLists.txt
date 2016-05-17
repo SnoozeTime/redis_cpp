@@ -35,7 +35,7 @@ set(DEPENDENCIES boost_system pthread)
 # -------------------------------------------
 # Exec + lib
 # -------------------------------------------
-add_library(rediscpp SHARED ${SOURCES})
+add_library(rediscpp SHARED  src/redis_interface.cpp ${SOURCES})
 add_executable(example ${EXAMPLE_SOURCES})
 
 target_compile_definitions(rediscpp PRIVATE DEBUG=1)

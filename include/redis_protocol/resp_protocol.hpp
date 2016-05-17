@@ -33,7 +33,8 @@ namespace rediscpp {
             ERROR,
             INTEGER,
             BULK_STRING,
-            ARRAY
+            ARRAY,
+            NIL_VALUE,
         };
 
         /*
@@ -57,13 +58,7 @@ namespace rediscpp {
             /*
                 The type of the reply, which will decide the type of value.
             */
-            RedisDataType type;
-
-            /*
-                this is true if we receive an error string from the server.
-                In this case, error value is inside string_value
-            */
-            bool is_error;
+            RedisDataType type = ERROR;
 
             /*
                 Integer value received by the server
@@ -73,7 +68,7 @@ namespace rediscpp {
             /*
                 string, error or bulk string
             */
-            std::string string_value;
+            std::string string_value = "Empty reply - not received by the server";
 
             /*
                 Add a redis reply to the array.

@@ -14,6 +14,7 @@ using boost::asio::ip::tcp;
 // std::string encode_bulk_array(std::vector<std::string> array);
 
 #include "redis_protocol/resp_protocol.hpp"
+#include "redis_interface.hpp"
 
 rediscpp::protocol::RedisReplyPtr get_reply()
 {
@@ -46,52 +47,56 @@ int main()
     //rediscpp::protocol::RedisReplyPtr reply = rediscpp::protocol::ParseReply("+OK\r\n");
 
     //std::cout << reply->string_value << std::endl;
-    std::string array_str = "*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n";
+    // std::string array_str = "*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n";
+    //
+    // auto array = make_unique<rediscpp::protocol::RedisReply>();
+    // DecodeArray(array_str, array.get());
+    // std::cout << array->string_value << std::endl;
+    // for (auto& el : array->elements) {
+    //     switch (el->type) {
+    //         case rediscpp::protocol::INTEGER:
+    //             std::cout << "Value is integer: " << el->integer_value << std::endl;
+    //             break;
+    //         case rediscpp::protocol::BULK_STRING:
+    //             std::cout << "Value is bulk string: " << el->string_value << std::endl;
+    //             break;
+    //         case rediscpp::protocol::SIMPLE_STRING:
+    //             std::cout << "Value is bulk string: " << el->string_value << std::endl;
+    //             break;
+    //         case rediscpp::protocol::ERROR:
+    //             std::cout << "Error " << el->string_value << std::endl;
+    //         case rediscpp::protocol::ARRAY:
+    //             std::cout << "Value is array\n";
+    //             for (auto& el2 : el->elements) {
+    //                 switch (el2->type) {
+    //                     case rediscpp::protocol::INTEGER:
+    //                         std::cout << "Value is integer: " << el2->integer_value << std::endl;
+    //                         break;
+    //                     case rediscpp::protocol::BULK_STRING:
+    //                         std::cout << "Value is bulk string: " << el2->string_value << std::endl;
+    //                         break;
+    //                     case rediscpp::protocol::SIMPLE_STRING:
+    //                         std::cout << "Value is bulk string: " << el2->string_value << std::endl;
+    //                         break;
+    //                     case rediscpp::protocol::ERROR:
+    //                         std::cout << "Error " << el2->string_value << std::endl;
+    //                     case rediscpp::protocol::ARRAY:
+    //                         std::cout << "Value is array\n";
+    //                         break;
+    //                     default:
+    //                     break;
+    //                 }
+    //             }
+    //             break;
+    //         default:
+    //         break;
+    //     }
+    // }
 
-    auto array = make_unique<rediscpp::protocol::RedisReply>();
-    DecodeArray(array_str, array.get());
-    std::cout << array->string_value << std::endl;
-    for (auto& el : array->elements) {
-        switch (el->type) {
-            case rediscpp::protocol::INTEGER:
-                std::cout << "Value is integer: " << el->integer_value << std::endl;
-                break;
-            case rediscpp::protocol::BULK_STRING:
-                std::cout << "Value is bulk string: " << el->string_value << std::endl;
-                break;
-            case rediscpp::protocol::SIMPLE_STRING:
-                std::cout << "Value is bulk string: " << el->string_value << std::endl;
-                break;
-            case rediscpp::protocol::ERROR:
-                std::cout << "Error " << el->string_value << std::endl;
-            case rediscpp::protocol::ARRAY:
-                std::cout << "Value is array\n";
-                for (auto& el2 : el->elements) {
-                    switch (el2->type) {
-                        case rediscpp::protocol::INTEGER:
-                            std::cout << "Value is integer: " << el2->integer_value << std::endl;
-                            break;
-                        case rediscpp::protocol::BULK_STRING:
-                            std::cout << "Value is bulk string: " << el2->string_value << std::endl;
-                            break;
-                        case rediscpp::protocol::SIMPLE_STRING:
-                            std::cout << "Value is bulk string: " << el2->string_value << std::endl;
-                            break;
-                        case rediscpp::protocol::ERROR:
-                            std::cout << "Error " << el2->string_value << std::endl;
-                        case rediscpp::protocol::ARRAY:
-                            std::cout << "Value is array\n";
-                            break;
-                        default:
-                        break;
-                    }
-                }
-                break;
-            default:
-            break;
-        }
-    }
+    rediscpp::RedisInterface redis("localhost", "6379");
+    auto reply = redis.Get("hello");
 
+    std::cout << reply->string_value << std::endl;
 
     // reply1.redis_array.push_back(reply2);
     // reply1.redis_array.push_back(reply3);

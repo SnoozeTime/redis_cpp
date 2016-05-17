@@ -235,9 +235,12 @@ RedisReplyPtr ParseReply(const std::string reply_str)
         } else if (reply_type == '$') {
             // bulk string
             std::string tmp;
-            if (DecodeBulkString(reply_str, tmp) == OK) {
+            auto ret = DecodeBulkString(reply_str, tmp);
+            if (ret == OK) {
                 reply->type = BULK_STRING;
                 reply->string_value = tmp;
+            } else if (ret == NIL) {
+                    reply->type = NIL_VALUE;
             } else {
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the bulk string value";
@@ -441,7 +444,7 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
                 bulk_string_element->type = BULK_STRING;
                 bulk_string_element->string_value = bulk_string;
                 array->AddElementToArray(bulk_string_element);
-            } else if(ret == PARSE_ERROR) {
+            }  else if(ret == PARSE_ERROR) {
                 array->type = ERROR;
                 array->string_value = "Cannot decode bulk string element";
                 return -1;
