@@ -56,9 +56,22 @@ EncodeDecodeResult DecodeString(const std::string string_to_decode, std::string&
     }
 
     // Then, check that the first character is : and the two last chars are \r\n
-    if (string_to_decode[0] != '+' ||
-        string_to_decode[packet_size - 2] != '\r' ||
-        string_to_decode[packet_size - 1] != '\n') {
+    if (string_to_decode[0] != '+') {
+        debug_print("First char should be +: %c\n", string_to_decode[0]);
+        return PARSE_ERROR;
+    }
+
+    // check if there isn't any new line character inside the string.
+    std::size_t found = string_to_decode.find_first_of("\r");
+    if (found == std::string::npos || found != packet_size - 2) {
+        debug_print("%s\n", "Bad position for \\r character");
+        return PARSE_ERROR;
+    }
+
+    // check if there isn't any new line character inside the string.
+    found = string_to_decode.find_first_of("\n");
+    if (found == std::string::npos || found != packet_size - 1) {
+        debug_print("%s\n", "Bad position for \\n character");
         return PARSE_ERROR;
     }
 
@@ -150,7 +163,7 @@ EncodeDecodeResult DecodeBulkString(const std::string bulk_string_to_decode, std
         }
 
         // Should be ok now.
-        result = bulk_string_to_decode.substr(i + 1, bulk_str_size + 1);
+        result = bulk_string_to_decode.substr(i + 1, bulk_str_size);
         return OK;
     } catch (std::invalid_argument &invalid_arg) {
         debug_print("Error in decode_bulk_string: %s - %s \n", invalid_arg.what(), len_str.c_str());

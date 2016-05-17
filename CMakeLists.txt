@@ -32,6 +32,9 @@ file(GLOB EXAMPLE_SOURCES "examples/*.cpp")
 # -------------------------------------------
 set(DEPENDENCIES boost_system pthread)
 
+# -------------------------------------------
+# Exec + lib
+# -------------------------------------------
 add_library(rediscpp SHARED ${SOURCES})
 add_executable(example ${EXAMPLE_SOURCES})
 
@@ -39,3 +42,9 @@ target_compile_definitions(rediscpp PRIVATE DEBUG=1)
 
 target_link_libraries(rediscpp ${DEPENDENCIES})
 target_link_libraries(example rediscpp)
+
+# -------------------------------------------
+# tests
+# -------------------------------------------
+add_executable(tests tests/protocol_tests.cpp)
+target_link_libraries(tests rediscpp boost_unit_test_framework boost_system)
