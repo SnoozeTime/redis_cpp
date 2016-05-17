@@ -417,12 +417,18 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
 
             // And decode it.
             std::string bulk_string;
-            if (DecodeBulkString(bulk_string_to_decode, bulk_string) == OK) {
+            EncodeDecodeResult ret = DecodeBulkString(bulk_string_to_decode, bulk_string);
+            /*
+                If ok, create the node with a bulk string type. If parse error, will be
+                an error type.
+                Otherwise, it is NIL so ignore the node.
+            */
+            if (ret == OK) {
                 RedisReplyPtr bulk_string_element = make_unique<RedisReply>();
                 bulk_string_element->type = BULK_STRING;
                 bulk_string_element->string_value = bulk_string;
                 array->AddElementToArray(bulk_string_element);
-            } else {
+            } else if(ret == PARSE_ERROR) {
                 array->type = ERROR;
                 array->string_value = "Cannot decode bulk string element";
                 return -1;
@@ -434,6 +440,13 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
             //Hell.
             RedisReplyPtr array_element = make_unique<RedisReply>();
             int to_add = DecodeArray(array_to_decode.substr(index), array_element.get());
+
+            if (to_add == -1) {
+                // Error, return -1.
+                array->type = ERROR;
+                array->string_value = "Error when parsing array.";
+                return -1;
+            }
             array->AddElementToArray(array_element);
             index += to_add;
         } else {
