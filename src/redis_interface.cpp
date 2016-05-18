@@ -26,7 +26,7 @@ RedisInterface::RedisInterface(std::string host, std::string port):
     // Successfully connected yay
 }
 
-protocol::RedisReplyPtr  RedisInterface::SendEncodedPacket(std::string packet)
+protocol::RedisReplyPtr RedisInterface::SendEncodedPacket(std::string packet)
 {
     boost::system::error_code error;
     boost::asio::write(socket_, boost::asio::buffer(packet), boost::asio::transfer_all(), error);
@@ -42,7 +42,9 @@ protocol::RedisReplyPtr  RedisInterface::SendEncodedPacket(std::string packet)
         boost::array<char, 128> buf;
         boost::system::error_code error;
 
+        // This will block if connection is very slow...
         size_t len = socket_.read_some(boost::asio::buffer(buf), error);
+
 
         if (error == boost::asio::error::eof)
             break; // Connection closed cleanly by peer.
@@ -50,7 +52,6 @@ protocol::RedisReplyPtr  RedisInterface::SendEncodedPacket(std::string packet)
             throw boost::system::system_error(error); // Some other error.
 
         received_packet += std::string(buf.data(), len);
-        std::cout << received_packet << std::endl;
 
         // check each step if the reply is a valid redis reply. If not. read more
         // bytes.
@@ -58,6 +59,9 @@ protocol::RedisReplyPtr  RedisInterface::SendEncodedPacket(std::string packet)
         if (partial_reply->type != protocol::ERROR) {
             reply.swap( partial_reply);
             break;
+        } else {
+            std::cout << "Reply is not complete yet\n";
+            std::cout << partial_reply->string_value << std::endl;
         }
     }
 
@@ -78,5 +82,35 @@ protocol::RedisReplyPtr RedisInterface::Get(std::string key)
     return SendEncodedPacket(packet);
 }
 
+protocol::RedisReplyPtr RedisInterface::Set(std::string key, std::string value)
+{
+    std::vector<std::string> bulk_values = {"SET", key, value};
+    std::string packet;
+    protocol::EncodeBulkStringArray(bulk_values, packet);
+    return SendEncodedPacket(packet);
+}
+
+protocol::RedisReplyPtr RedisInterface::Lpop(std::string key)
+{
+    std::vector<std::string> bulk_values = {"LPOP", key};
+    std::string packet;
+    protocol::EncodeBulkStringArray(bulk_values, packet);
+    return SendEncodedPacket(packet);
+}
+
+protocol::RedisReplyPtr RedisInterface::Rpop(std::string key)
+{
+    std::vector<std::string> bulk_values = {"RPOP", key};
+    std::string packet;
+    protocol::EncodeBulkStringArray(bulk_values, packet);
+    return SendEncodedPacket(packet);
+}
+
+protocol::RedisReplyPtr RedisInterface::SendCommand(std::vector<std::string> tokens)
+{
+    std::string packet;
+    protocol::EncodeBulkStringArray(tokens, packet);
+    return SendEncodedPacket(packet);
+}
 
 }

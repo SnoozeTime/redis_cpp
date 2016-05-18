@@ -20,7 +20,6 @@ endif()
 # -------------------------------------------
 include_directories(include)
 
-
 # -------------------------------------------
 # Source files
 # -------------------------------------------
@@ -42,6 +41,8 @@ target_compile_definitions(rediscpp PRIVATE DEBUG=1)
 
 target_link_libraries(rediscpp ${DEPENDENCIES})
 target_link_libraries(example rediscpp)
+target_compile_definitions(example PRIVATE DEBUG=1)
+
 
 # -------------------------------------------
 # tests

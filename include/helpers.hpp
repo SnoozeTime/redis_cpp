@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 /*
     Provides some functions used in the RedisWrapper but which make not sense
     putting in the .hpp because they are not directly related to redis.
@@ -25,5 +26,18 @@ template<typename T, typename ...Args>
 std::unique_ptr<T> make_unique( Args&& ...args )
 {
     return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+}
+
+
+/*
+    Put all the values in a vector.
+*/
+void push_all(std::vector<std::string>& accumulator, std::string value);
+
+template<typename ... Args>
+void push_all(std::vector<std::string>& accumulator, std::string first, Args ... rest)
+{
+    accumulator.push_back(first);
+    push_all(accumulator, rest ...);
 }
 #endif

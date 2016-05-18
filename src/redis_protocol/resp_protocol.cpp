@@ -192,16 +192,21 @@ RedisReplyPtr ParseReply(const std::string reply_str)
 {
     RedisReplyPtr reply = make_unique<RedisReply>();
 
-    // First, check that length is valid.
-    if (reply_str.size() < 4) {
-        reply->type = ERROR;
-        reply->string_value = "The input string is too short to be a redis reply";
-    } else {
+    // Get the type of the reply.
+    for (int index = 0; index < reply_str.size(); index++) {
 
-        // Get the type of the reply.
-        char reply_type = reply_str[0];
+        if (reply_str.size() - index < 4) {
+            reply->type = ERROR;
+            reply->string_value = "The input string is too short to be a redis reply";
+
+            // all the other substring after are also too short.
+            break;
+        }
+
+        char reply_type = reply_str[index];
         if (reply_type == '+') {
             // string
+            std::cout << "--->STIRNG\n";
             std::string tmp;
             if (DecodeString(reply_str, tmp) == OK) {
                 reply->type = SIMPLE_STRING;
@@ -210,20 +215,24 @@ RedisReplyPtr ParseReply(const std::string reply_str)
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the string value";
             }
+            break;
         } else if (reply_type == '-') {
             // error string
             // string
+            std::cout << "--->ERROR\n";
             std::string tmp;
-            if (DecodeString(reply_str, tmp) == OK) {
+            if (DecodeError(reply_str, tmp) == OK) {
                 reply->type = SIMPLE_STRING;
                 reply->string_value = tmp;
             } else {
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the string value";
             }
+            break;
         } else if (reply_type == ':') {
             /// integer
             // string
+            std::cout << "--->INTEGER\n";
             int tmp;
             if (DecodeInteger(reply_str, tmp) == OK) {
                 reply->type = INTEGER;
@@ -232,32 +241,37 @@ RedisReplyPtr ParseReply(const std::string reply_str)
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the integer value";
             }
+            break;
         } else if (reply_type == '$') {
             // bulk string
+            std::cout << "--->BULK\n";
             std::string tmp;
             auto ret = DecodeBulkString(reply_str, tmp);
             if (ret == OK) {
                 reply->type = BULK_STRING;
                 reply->string_value = tmp;
             } else if (ret == NIL) {
-                    reply->type = NIL_VALUE;
+                reply->type = NIL_VALUE;
             } else {
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the bulk string value";
             }
+            break;
         } else if (reply_type == '*') {
             // array
             // And here the fun begin.
-            if (DecodeArray(reply_str, reply.get()) == OK) {
+            std::cout << "--->ARRAY\n";
+            if (DecodeArray(reply_str, reply.get()) != -1) {
 
             } else {
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the array.";
             }
+            break;
         } else {
-            //error unknown type.
+            //error unknown type, try next char.
+            continue;
         }
-
     }
 
     return reply;
@@ -266,6 +280,11 @@ RedisReplyPtr ParseReply(const std::string reply_str)
 int DecodeArray(const std::string array_to_decode, RedisReply* array)
 {
     array->type = ARRAY;
+
+    if (array_to_decode == "*-1\r\n") {
+        array->type = NIL_VALUE;
+        return 4;
+    }
 
     int index = 1;
     //First, get the size.
@@ -308,8 +327,6 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
         array->string_value = "Array error";
         return -1;
     }
-
-    debug_print("Size of array is %d\n", size);
 
     while (index < array_to_decode.size() && array->elements.size() != size) {
 
@@ -445,6 +462,7 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
                 bulk_string_element->string_value = bulk_string;
                 array->AddElementToArray(bulk_string_element);
             }  else if(ret == PARSE_ERROR) {
+                std::cout << "BOOM THE PARSE ERROR\n";
                 array->type = ERROR;
                 array->string_value = "Cannot decode bulk string element";
                 return -1;
