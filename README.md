@@ -1,13 +1,14 @@
 Description
------------
+===========
 
 This is a c++11 redis client using boost.
+Make sure to download the boost library before compiling the code.
 
 Usage
------
+=====
 
 Base API
-^^^^^^^^
+--------
 
 **Initialize a redis connection**
 
@@ -66,7 +67,7 @@ auto reply = redis.SendCommand(command_tokens);
 ```
 
 The reply object
-^^^^^^^^^^^^^^^^
+----------------
 
 All the redis interface API return a unique pointer to a reply object. This reply
 object has the following fields:
