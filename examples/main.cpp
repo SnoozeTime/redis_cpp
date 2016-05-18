@@ -5,11 +5,8 @@
 void PrintReply(rediscpp::protocol::RedisReply* reply)
 {
     switch (reply->type) {
-    case rediscpp::protocol::BULK_STRING:
-        std::cout << "BULK STRING: " << reply->string_value << std::endl;
-        break;
-    case rediscpp::protocol::SIMPLE_STRING:
-        std::cout << "SIMPLE STRING: " << reply->string_value << std::endl;
+    case rediscpp::protocol::STRING:
+        std::cout << "STRING: " << reply->string_value << std::endl;
         break;
     case rediscpp::protocol::INTEGER:
         std::cout << "INTEGER: " << reply->integer_value << std::endl;
@@ -36,7 +33,7 @@ int main()
     rediscpp::RedisInterface redis("localhost", "6379");
 
     {
-        auto reply = redis.BrpopTimeout("mylist", 2);
+        auto reply = redis.BrpopTimeout(3, "mylist", "mylist2");
         PrintReply(reply.get());
     }
 

@@ -29,10 +29,9 @@ namespace rediscpp {
             The redis data type.
         */
         enum RedisDataType {
-            SIMPLE_STRING,
+            STRING,
             ERROR,
             INTEGER,
-            BULK_STRING,
             ARRAY,
             NIL_VALUE,
         };

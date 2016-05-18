@@ -93,9 +93,9 @@ public:
         You can give many list name. The first non-empty in order will be poped.
     */
     template <typename ... Args>
-    protocol::RedisReplyPtr Blpop(std::string key, Args ... values)
+    protocol::RedisReplyPtr Blpop(Args ... keys)
     {
-        return AccumulateAndSend("BLPOP", key, values ..., "0");
+        return AccumulateAndSend("BLPOP", keys ..., "0");
     }
 
     /*
@@ -104,27 +104,27 @@ public:
         You can give many list name. The first non-empty in order will be poped.
     */
     template <typename ... Args>
-    protocol::RedisReplyPtr Brpop(std::string key, Args ... values)
+    protocol::RedisReplyPtr Brpop(Args ... keys)
     {
-        return AccumulateAndSend("BRPOP", key, values ..., "0");
+        return AccumulateAndSend("BRPOP", keys ..., "0");
     }
 
     /*
         Blocking left pop with timeout
     */
     template <typename ... Args>
-    protocol::RedisReplyPtr BlpopTimeout(std::string key, unsigned int timeout, Args ... values)
+    protocol::RedisReplyPtr BlpopTimeout(unsigned int timeout, Args ... keys)
     {
-        return AccumulateAndSend("BLPOP", key, values ..., std::to_string(timeout));
+        return AccumulateAndSend("BLPOP", keys ..., std::to_string(timeout));
     }
 
     /*
         Blocking right pop with timeout
     */
     template <typename ... Args>
-    protocol::RedisReplyPtr BrpopTimeout(std::string key, unsigned int timeout, Args ... values)
+    protocol::RedisReplyPtr BrpopTimeout(unsigned int timeout, Args ... keys)
     {
-        return AccumulateAndSend("BRPOP", key, values ..., std::to_string(timeout));
+        return AccumulateAndSend("BRPOP", keys ..., std::to_string(timeout));
     }
 
 

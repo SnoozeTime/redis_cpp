@@ -205,11 +205,9 @@ RedisReplyPtr ParseReply(const std::string reply_str)
 
         char reply_type = reply_str[index];
         if (reply_type == '+') {
-            // string
-            std::cout << "--->STIRNG\n";
             std::string tmp;
             if (DecodeString(reply_str, tmp) == OK) {
-                reply->type = SIMPLE_STRING;
+                reply->type = STRING;
                 reply->string_value = tmp;
             } else {
                 reply->type = ERROR;
@@ -217,12 +215,9 @@ RedisReplyPtr ParseReply(const std::string reply_str)
             }
             break;
         } else if (reply_type == '-') {
-            // error string
-            // string
-            std::cout << "--->ERROR\n";
             std::string tmp;
             if (DecodeError(reply_str, tmp) == OK) {
-                reply->type = SIMPLE_STRING;
+                reply->type = STRING;
                 reply->string_value = tmp;
             } else {
                 reply->type = ERROR;
@@ -230,9 +225,6 @@ RedisReplyPtr ParseReply(const std::string reply_str)
             }
             break;
         } else if (reply_type == ':') {
-            /// integer
-            // string
-            std::cout << "--->INTEGER\n";
             int tmp;
             if (DecodeInteger(reply_str, tmp) == OK) {
                 reply->type = INTEGER;
@@ -243,12 +235,10 @@ RedisReplyPtr ParseReply(const std::string reply_str)
             }
             break;
         } else if (reply_type == '$') {
-            // bulk string
-            std::cout << "--->BULK\n";
             std::string tmp;
             auto ret = DecodeBulkString(reply_str, tmp);
             if (ret == OK) {
-                reply->type = BULK_STRING;
+                reply->type = STRING;
                 reply->string_value = tmp;
             } else if (ret == NIL) {
                 reply->type = NIL_VALUE;
@@ -260,10 +250,7 @@ RedisReplyPtr ParseReply(const std::string reply_str)
         } else if (reply_type == '*') {
             // array
             // And here the fun begin.
-            std::cout << "--->ARRAY\n";
-            if (DecodeArray(reply_str, reply.get()) != -1) {
-
-            } else {
+            if (DecodeArray(reply_str, reply.get()) == -1) {
                 reply->type = ERROR;
                 reply->string_value = "Cannot decode the array.";
             }
@@ -376,7 +363,7 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
             std::string string_value;
             if (DecodeString(string_to_decode, string_value) == OK) {
                 RedisReplyPtr string_element = make_unique<RedisReply>();
-                string_element->type = SIMPLE_STRING;
+                string_element->type = STRING;
                 string_element->string_value = string_value;
                 array->AddElementToArray(string_element);
             } else {
@@ -405,7 +392,7 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
             std::string error_value;
             if (DecodeError(error_to_decode, error_value) == OK) {
                 RedisReplyPtr error_element = make_unique<RedisReply>();
-                error_element->type = SIMPLE_STRING;
+                error_element->type = STRING;
                 error_element->string_value = error_value;
                 array->AddElementToArray(error_element);
             } else {
@@ -458,11 +445,10 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
             */
             if (ret == OK) {
                 RedisReplyPtr bulk_string_element = make_unique<RedisReply>();
-                bulk_string_element->type = BULK_STRING;
+                bulk_string_element->type = STRING;
                 bulk_string_element->string_value = bulk_string;
                 array->AddElementToArray(bulk_string_element);
             }  else if(ret == PARSE_ERROR) {
-                std::cout << "BOOM THE PARSE ERROR\n";
                 array->type = ERROR;
                 array->string_value = "Cannot decode bulk string element";
                 return -1;
