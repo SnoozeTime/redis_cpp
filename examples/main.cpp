@@ -29,12 +29,17 @@ void PrintReply(rediscpp::protocol::RedisReply* reply)
 int main()
 {
 
+    try {
+        rediscpp::RedisInterface redis("localhost", "6379");
 
-    rediscpp::RedisInterface redis("localhost", "6379");
-
-    {
-        auto reply = redis.BrpopTimeout(3, "mylist", "mylist2");
-        PrintReply(reply.get());
+        for (int i = 0; i < 100000; i++)
+        {
+            std::string key = "key" + std::to_string(i);
+            auto reply = redis.Get(key);
+            PrintReply(reply.get());
+        }
+    } catch (std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 
     return 0;

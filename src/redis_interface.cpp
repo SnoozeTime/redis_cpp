@@ -45,11 +45,12 @@ protocol::RedisReplyPtr RedisInterface::SendEncodedPacket(std::string packet)
         // This will block if connection is very slow...
         size_t len = socket_.read_some(boost::asio::buffer(buf), error);
 
-
         if (error == boost::asio::error::eof)
             break; // Connection closed cleanly by peer.
         else if (error)
-            throw boost::system::system_error(error); // Some other error.
+            reply->type = protocol::ERROR;
+            reply->string_value = error.message();
+            //throw boost::system::system_error(error); // Some other error.
 
         received_packet += std::string(buf.data(), len);
 
@@ -74,36 +75,37 @@ protocol::RedisReplyPtr RedisInterface::Get(std::string key)
 {
     // First, encode the string to send.
     std::vector<std::string> bulk_values = {"GET", key};
-    std::string packet;
-    // Never fails...
-    protocol::EncodeBulkStringArray(bulk_values, packet);
-
-    // Send it and return the reply
-    return SendEncodedPacket(packet);
+    return SendCommand(bulk_values);
 }
 
 protocol::RedisReplyPtr RedisInterface::Set(std::string key, std::string value)
 {
     std::vector<std::string> bulk_values = {"SET", key, value};
-    std::string packet;
-    protocol::EncodeBulkStringArray(bulk_values, packet);
-    return SendEncodedPacket(packet);
+    return SendCommand(bulk_values);
+}
+
+protocol::RedisReplyPtr RedisInterface::Lrange(std::string key, int begin, int end)
+{
+    std::vector<std::string> bulk_values = {"LRANGE", key, std::to_string(begin), std::to_string(end)};
+    return SendCommand(bulk_values);
+}
+
+protocol::RedisReplyPtr RedisInterface::Ltrim(std::string key, int begin, int end)
+{
+    std::vector<std::string> bulk_values = {"LTRIM", key, std::to_string(begin), std::to_string(end)};
+    return SendCommand(bulk_values);
 }
 
 protocol::RedisReplyPtr RedisInterface::Lpop(std::string key)
 {
     std::vector<std::string> bulk_values = {"LPOP", key};
-    std::string packet;
-    protocol::EncodeBulkStringArray(bulk_values, packet);
-    return SendEncodedPacket(packet);
+    return SendCommand(bulk_values);
 }
 
 protocol::RedisReplyPtr RedisInterface::Rpop(std::string key)
 {
     std::vector<std::string> bulk_values = {"RPOP", key};
-    std::string packet;
-    protocol::EncodeBulkStringArray(bulk_values, packet);
-    return SendEncodedPacket(packet);
+    return SendCommand(bulk_values);
 }
 
 protocol::RedisReplyPtr RedisInterface::SendCommand(std::vector<std::string> tokens)

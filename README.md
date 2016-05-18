@@ -4,6 +4,12 @@ Description
 This is a c++11 redis client using boost.
 Make sure to download the boost library before compiling the code.
 
+To do
+=====
+
+* Add a timeout for reading from server.
+* More API 
+
 Usage
 =====
 

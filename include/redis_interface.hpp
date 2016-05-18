@@ -62,6 +62,18 @@ public:
     }
 
     /*
+        Get values from a list.
+        By default, get everything
+    */
+    protocol::RedisReplyPtr Lrange(std::string key, int begin = 0, int end = -1);
+
+    /*
+        Trim an existing list so that it will contain only the specified range
+        of elements specified
+    */
+    protocol::RedisReplyPtr Ltrim(std::string key, int begin, int end);
+
+    /*
         Push a value to the right of a list
         you can push many values by separating them with a comma
 
@@ -135,6 +147,7 @@ public:
         and "*"
     */
     protocol::RedisReplyPtr SendCommand(std::vector<std::string> tokens);
+
 private:
 
     /*
