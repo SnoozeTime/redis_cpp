@@ -24,7 +24,6 @@ include_directories(include)
 # Source files
 # -------------------------------------------
 file(GLOB SOURCES "src/*.cpp" "src/redis_protocol/*.cpp")
-file(GLOB EXAMPLE_SOURCES "examples/*.cpp")
 
 # -------------------------------------------
 # Dependencies
@@ -35,14 +34,16 @@ set(DEPENDENCIES boost_system pthread)
 # Exec + lib
 # -------------------------------------------
 add_library(rediscpp SHARED  src/redis_interface.cpp ${SOURCES})
-add_executable(example ${EXAMPLE_SOURCES})
 
 target_compile_definitions(rediscpp PRIVATE DEBUG=1)
-
 target_link_libraries(rediscpp ${DEPENDENCIES})
-target_link_libraries(example rediscpp)
-target_compile_definitions(example PRIVATE DEBUG=1)
 
+# EXAMPLES
+add_executable(simple examples/basic_functions.cpp)
+target_link_libraries(simple rediscpp)
+
+add_executable(task_queue examples/task_queue.cpp)
+target_link_libraries(task_queue rediscpp)
 
 # -------------------------------------------
 # tests
