@@ -4,11 +4,14 @@ Description
 This is a c++11 redis client using boost.
 Make sure to download the boost library before compiling the code.
 
+DISCLAIMER: For personal use on a local redis server. Did not try with a bad
+tcp connection so the approach might be still naive.
+
 To do
 =====
 
 * Add a timeout for reading from server.
-* More API 
+* More API
 
 Usage
 =====
