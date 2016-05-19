@@ -5,19 +5,19 @@
 void PrintReply(rediscpp::protocol::RedisReply* reply)
 {
     switch (reply->type) {
-    case rediscpp::protocol::STRING:
+    case rediscpp::protocol::RedisDataType::STRING:
         std::cout << "STRING: " << reply->string_value << std::endl;
         break;
-    case rediscpp::protocol::INTEGER:
+    case rediscpp::protocol::RedisDataType::INTEGER:
         std::cout << "INTEGER: " << reply->integer_value << std::endl;
         break;
-    case rediscpp::protocol::ERROR:
+    case rediscpp::protocol::RedisDataType::ERROR:
         std::cout << "ERROR: " << reply->string_value << std::endl;
         break;
-    case rediscpp::protocol::NIL_VALUE:
+    case rediscpp::protocol::RedisDataType::NIL_VALUE:
         std::cout << "NIL VALUE\n";
         break;
-    case rediscpp::protocol::ARRAY:
+    case rediscpp::protocol::RedisDataType::ARRAY:
         std::cout << "Got an array of " << reply->elements.size() << " elements\n";
         for (auto& el : reply->elements) {
             PrintReply(el.get());
@@ -43,5 +43,4 @@ int main()
     }
 
     return 0;
-
 }

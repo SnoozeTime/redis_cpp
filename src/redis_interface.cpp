@@ -48,7 +48,7 @@ protocol::RedisReplyPtr RedisInterface::SendEncodedPacket(std::string packet)
         if (error == boost::asio::error::eof)
             break; // Connection closed cleanly by peer.
         else if (error)
-            reply->type = protocol::ERROR;
+            reply->type = protocol::RedisDataType::ERROR;
             reply->string_value = error.message();
             //throw boost::system::system_error(error); // Some other error.
 
@@ -57,7 +57,7 @@ protocol::RedisReplyPtr RedisInterface::SendEncodedPacket(std::string packet)
         // check each step if the reply is a valid redis reply. If not. read more
         // bytes.
         auto partial_reply = protocol::ParseReply(received_packet);
-        if (partial_reply->type != protocol::ERROR) {
+        if (partial_reply->type != protocol::RedisDataType::ERROR) {
             reply.swap( partial_reply);
             break;
         } else {

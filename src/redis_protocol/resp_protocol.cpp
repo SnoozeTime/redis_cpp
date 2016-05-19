@@ -9,7 +9,7 @@ namespace protocol {
 EncodeDecodeResult EncodeInteger(const int integer_to_encode, std::string &result)
 {
     result = ":" + std::to_string(integer_to_encode) + "\r\n";
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 EncodeDecodeResult DecodeInteger(const std::string integer_to_decode, int& result)
@@ -17,34 +17,34 @@ EncodeDecodeResult DecodeInteger(const std::string integer_to_decode, int& resul
     // At first, check that size > 4 (needs the :, the number and the \r\n)
     size_t packet_size = integer_to_decode.size();
     if (packet_size < 4) {
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // Then, check that the first character is : and the two last chars are \r\n
     if (integer_to_decode[0] != ':' ||
         integer_to_decode[packet_size - 2] != '\r' ||
         integer_to_decode[packet_size - 1] != '\n') {
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // Now, we have to convert from string to integer.
     try {
         std::string int_str = integer_to_decode.substr(1, packet_size - 3);
         result = std::stoi(int_str);
-        return OK;
+        return EncodeDecodeResult::OK;
     } catch (std::invalid_argument &invalid_arg) {
         debug_print("Error in decode_integer: %s\n", invalid_arg.what());
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     } catch (std::out_of_range &oor) {
         debug_print("Out of range in decode_integer: %s\n", oor.what());
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 }
 
 EncodeDecodeResult EncodeString(const std::string string_to_encode, std::string& result)
 {
     result = "+" + string_to_encode + "\r\n";
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 EncodeDecodeResult DecodeString(const std::string string_to_decode, std::string& result)
@@ -52,37 +52,37 @@ EncodeDecodeResult DecodeString(const std::string string_to_decode, std::string&
     // At first, check that size > 2  => +\r\n for empty string
     size_t packet_size = string_to_decode.size();
     if (packet_size < 3) {
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // Then, check that the first character is : and the two last chars are \r\n
     if (string_to_decode[0] != '+') {
         debug_print("First char should be +: %c\n", string_to_decode[0]);
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // check if there isn't any new line character inside the string.
     std::size_t found = string_to_decode.find_first_of("\r");
     if (found == std::string::npos || found != packet_size - 2) {
         debug_print("%s\n", "Bad position for \\r character");
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // check if there isn't any new line character inside the string.
     found = string_to_decode.find_first_of("\n");
     if (found == std::string::npos || found != packet_size - 1) {
         debug_print("%s\n", "Bad position for \\n character");
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     result = string_to_decode.substr(1, packet_size - 3);
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 EncodeDecodeResult EncodeError(const std::string error_to_encode, std::string& result)
 {
     result = "-" + error_to_encode + "\r\n";
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 /*
@@ -92,25 +92,25 @@ EncodeDecodeResult DecodeError(const std::string error_to_decode, std::string& r
 {
     size_t packet_size = error_to_decode.size();
     if (packet_size < 3) {
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // Then, check that the first character is : and the two last chars are \r\n
     if (error_to_decode[0] != '-' ||
         error_to_decode[packet_size - 2] != '\r' ||
         error_to_decode[packet_size - 1] != '\n') {
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     result = error_to_decode.substr(1, packet_size - 3);
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 
 EncodeDecodeResult EncodeBulkString(const std::string bulk_string_to_encode, std::string& result)
 {
     result =  "$" + std::to_string(bulk_string_to_encode.size()) + "\r\n" + bulk_string_to_encode + "\r\n";
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 EncodeDecodeResult DecodeBulkString(const std::string bulk_string_to_decode, std::string& result)
@@ -118,18 +118,18 @@ EncodeDecodeResult DecodeBulkString(const std::string bulk_string_to_decode, std
     size_t packet_size = bulk_string_to_decode.size();
     // minimum size is 5: $-1\r\n
     if (packet_size < 5) {
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // Verify string is a bulk string
     if (bulk_string_to_decode[0] != '$') {
         debug_print("%c is different than $", bulk_string_to_decode[0]);
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
     // Check if null string.
     if (bulk_string_to_decode == "$-1\r\n") {
-        return NIL;
+        return EncodeDecodeResult::NIL;
     }
 
     // Then, let's get the string size. (first part of the packet.)
@@ -155,25 +155,25 @@ EncodeDecodeResult DecodeBulkString(const std::string bulk_string_to_decode, std
         // + 2 (because of last /r/n)
         if (packet_size != i + bulk_str_size + 3) {
             debug_print("Wrong size for bulk string packet: %d\n", i + bulk_str_size + 3);
-            return PARSE_ERROR;
+            return EncodeDecodeResult::PARSE_ERROR;
         } else if (bulk_string_to_decode[packet_size - 2] != '\r' ||
                    bulk_string_to_decode[packet_size - 1] != '\n') {
             debug_print("%s", "Packet does not finish by \\r\\n");
-            return PARSE_ERROR;
+            return EncodeDecodeResult::PARSE_ERROR;
         }
 
         // Should be ok now.
         result = bulk_string_to_decode.substr(i + 1, bulk_str_size);
-        return OK;
+        return EncodeDecodeResult::OK;
     } catch (std::invalid_argument &invalid_arg) {
         debug_print("Error in decode_bulk_string: %s - %s \n", invalid_arg.what(), len_str.c_str());
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     } catch (std::out_of_range &oor) {
         debug_print("Out of range in decode_bulk_string: %s\n", oor.what());
-        return PARSE_ERROR;
+        return EncodeDecodeResult::PARSE_ERROR;
     }
 
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 EncodeDecodeResult EncodeBulkStringArray(const std::vector<std::string> array_to_encode, std::string& result)
@@ -184,7 +184,7 @@ EncodeDecodeResult EncodeBulkStringArray(const std::vector<std::string> array_to
         EncodeBulkString(el, tmp_result);
         result += tmp_result;
     }
-    return OK;
+    return EncodeDecodeResult::OK;
 }
 
 
@@ -196,7 +196,7 @@ RedisReplyPtr ParseReply(const std::string reply_str)
     for (int index = 0; index < reply_str.size(); index++) {
 
         if (reply_str.size() - index < 4) {
-            reply->type = ERROR;
+            reply->type = RedisDataType::ERROR;
             reply->string_value = "The input string is too short to be a redis reply";
 
             // all the other substring after are also too short.
@@ -206,44 +206,44 @@ RedisReplyPtr ParseReply(const std::string reply_str)
         char reply_type = reply_str[index];
         if (reply_type == '+') {
             std::string tmp;
-            if (DecodeString(reply_str, tmp) == OK) {
-                reply->type = STRING;
+            if (DecodeString(reply_str, tmp) == EncodeDecodeResult::OK) {
+                reply->type = RedisDataType::STRING;
                 reply->string_value = tmp;
             } else {
-                reply->type = ERROR;
+                reply->type = RedisDataType::ERROR;
                 reply->string_value = "Cannot decode the string value";
             }
             break;
         } else if (reply_type == '-') {
             std::string tmp;
-            if (DecodeError(reply_str, tmp) == OK) {
-                reply->type = STRING;
+            if (DecodeError(reply_str, tmp) == EncodeDecodeResult::OK) {
+                reply->type = RedisDataType::STRING;
                 reply->string_value = tmp;
             } else {
-                reply->type = ERROR;
+                reply->type = RedisDataType::ERROR;
                 reply->string_value = "Cannot decode the string value";
             }
             break;
         } else if (reply_type == ':') {
             int tmp;
-            if (DecodeInteger(reply_str, tmp) == OK) {
-                reply->type = INTEGER;
+            if (DecodeInteger(reply_str, tmp) == EncodeDecodeResult::OK) {
+                reply->type = RedisDataType::INTEGER;
                 reply->integer_value = tmp;
             } else {
-                reply->type = ERROR;
+                reply->type = RedisDataType::ERROR;
                 reply->string_value = "Cannot decode the integer value";
             }
             break;
         } else if (reply_type == '$') {
             std::string tmp;
             auto ret = DecodeBulkString(reply_str, tmp);
-            if (ret == OK) {
-                reply->type = STRING;
+            if (ret == EncodeDecodeResult::OK) {
+                reply->type = RedisDataType::STRING;
                 reply->string_value = tmp;
-            } else if (ret == NIL) {
-                reply->type = NIL_VALUE;
+            } else if (ret == EncodeDecodeResult::NIL) {
+                reply->type = RedisDataType::NIL_VALUE;
             } else {
-                reply->type = ERROR;
+                reply->type = RedisDataType::ERROR;
                 reply->string_value = "Cannot decode the bulk string value";
             }
             break;
@@ -251,7 +251,7 @@ RedisReplyPtr ParseReply(const std::string reply_str)
             // array
             // And here the fun begin.
             if (DecodeArray(reply_str, reply.get()) == -1) {
-                reply->type = ERROR;
+                reply->type = RedisDataType::ERROR;
                 reply->string_value = "Cannot decode the array.";
             }
             break;
@@ -266,10 +266,10 @@ RedisReplyPtr ParseReply(const std::string reply_str)
 
 int DecodeArray(const std::string array_to_decode, RedisReply* array)
 {
-    array->type = ARRAY;
+    array->type = RedisDataType::ARRAY;
 
     if (array_to_decode == "*-1\r\n") {
-        array->type = NIL_VALUE;
+        array->type = RedisDataType::NIL_VALUE;
         return 4;
     }
 
@@ -291,12 +291,12 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
     try {
         size = std::stoi(size_str);
     } catch (std::invalid_argument &invalid_arg) {
-        array->type = ERROR;
+        array->type = RedisDataType::ERROR;
         array->string_value = "Array error";
         debug_print("Error in decode_arrayr: %s\n", invalid_arg.what());
         return -1;
     } catch (std::out_of_range &oor) {
-        array->type = ERROR;
+        array->type = RedisDataType::ERROR;
         array->string_value = "Out of range";
         debug_print("Out of range in decode_array: %s\n", oor.what());
         return -1;
@@ -310,7 +310,7 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
     if (size == 0) {
         return index;
     } else if (size == -1) {
-        array->type = ERROR;
+        array->type = RedisDataType::ERROR;
         array->string_value = "Array error";
         return -1;
     }
@@ -333,13 +333,13 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
             debug_print("Integer to decode string: %s\n", integer_to_decode.c_str());
 
             int integer;
-            if (DecodeInteger(integer_to_decode, integer) == OK) {
+            if (DecodeInteger(integer_to_decode, integer) == EncodeDecodeResult::OK) {
                 RedisReplyPtr integer_element = make_unique<RedisReply>();
-                integer_element->type = INTEGER;
+                integer_element->type = RedisDataType::INTEGER;
                 integer_element->integer_value = integer;
                 array->AddElementToArray(integer_element);
             } else {
-                array->type = ERROR;
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Cannot decode integer element";
                 return -1;
             }
@@ -361,13 +361,13 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
 
 
             std::string string_value;
-            if (DecodeString(string_to_decode, string_value) == OK) {
+            if (DecodeString(string_to_decode, string_value) == EncodeDecodeResult::OK) {
                 RedisReplyPtr string_element = make_unique<RedisReply>();
-                string_element->type = STRING;
+                string_element->type = RedisDataType::STRING;
                 string_element->string_value = string_value;
                 array->AddElementToArray(string_element);
             } else {
-                array->type = ERROR;
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Cannot decode string element";
                 return -1;
             }
@@ -390,13 +390,13 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
 
 
             std::string error_value;
-            if (DecodeError(error_to_decode, error_value) == OK) {
+            if (DecodeError(error_to_decode, error_value) == EncodeDecodeResult::OK) {
                 RedisReplyPtr error_element = make_unique<RedisReply>();
-                error_element->type = STRING;
+                error_element->type = RedisDataType::STRING;
                 error_element->string_value = error_value;
                 array->AddElementToArray(error_element);
             } else {
-                array->type = ERROR;
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Cannot decode error element";
                 return -1;
             }
@@ -421,12 +421,12 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
             try {
                 bulk_size = std::stoi(bulk_size_str);
             } catch (std::invalid_argument &invalid_arg) {
-                array->type = ERROR;
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Array error";
                 debug_print("Error in decode_arrar: %s\n", invalid_arg.what());
                 return -1;
             } catch (std::out_of_range &oor) {
-                array->type = ERROR;
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Out of range";
                 debug_print("Out of range in decode_array: %s\n", oor.what());
                 return -1;
@@ -443,13 +443,13 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
                 an error type.
                 Otherwise, it is NIL so ignore the node.
             */
-            if (ret == OK) {
+            if (ret == EncodeDecodeResult::OK) {
                 RedisReplyPtr bulk_string_element = make_unique<RedisReply>();
-                bulk_string_element->type = STRING;
+                bulk_string_element->type = RedisDataType::STRING;
                 bulk_string_element->string_value = bulk_string;
                 array->AddElementToArray(bulk_string_element);
-            }  else if(ret == PARSE_ERROR) {
-                array->type = ERROR;
+            }  else if(ret == EncodeDecodeResult::PARSE_ERROR) {
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Cannot decode bulk string element";
                 return -1;
             }
@@ -463,7 +463,7 @@ int DecodeArray(const std::string array_to_decode, RedisReply* array)
 
             if (to_add == -1) {
                 // Error, return -1.
-                array->type = ERROR;
+                array->type = RedisDataType::ERROR;
                 array->string_value = "Error when parsing array.";
                 return -1;
             }

@@ -19,7 +19,7 @@ namespace rediscpp {
         /*
             Return value from the encode / decode value
         */
-        enum EncodeDecodeResult {
+        enum class EncodeDecodeResult {
             OK,
             PARSE_ERROR, // When string do not correspond to integer, ...
             NIL, // when the result does not exist.
@@ -28,7 +28,7 @@ namespace rediscpp {
         /*
             The redis data type.
         */
-        enum RedisDataType {
+        enum class RedisDataType {
             STRING,
             ERROR,
             INTEGER,
@@ -57,7 +57,7 @@ namespace rediscpp {
             /*
                 The type of the reply, which will decide the type of value.
             */
-            RedisDataType type = ERROR;
+            RedisDataType type = RedisDataType::ERROR;
 
             /*
                 Integer value received by the server
