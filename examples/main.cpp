@@ -2,22 +2,25 @@
 #include "redis_protocol/resp_protocol.hpp"
 #include "redis_interface.hpp"
 
-void PrintReply(rediscpp::protocol::RedisReply* reply)
+using namespace rediscpp;
+using namespace rediscpp::protocol;
+
+void PrintReply(RedisReply* reply)
 {
     switch (reply->type) {
-    case rediscpp::protocol::RedisDataType::STRING:
+    case RedisDataType::STRING:
         std::cout << "STRING: " << reply->string_value << std::endl;
         break;
-    case rediscpp::protocol::RedisDataType::INTEGER:
+    case RedisDataType::INTEGER:
         std::cout << "INTEGER: " << reply->integer_value << std::endl;
         break;
-    case rediscpp::protocol::RedisDataType::ERROR:
+    case RedisDataType::ERROR:
         std::cout << "ERROR: " << reply->string_value << std::endl;
         break;
-    case rediscpp::protocol::RedisDataType::NIL_VALUE:
+    case RedisDataType::NIL_VALUE:
         std::cout << "NIL VALUE\n";
         break;
-    case rediscpp::protocol::RedisDataType::ARRAY:
+    case RedisDataType::ARRAY:
         std::cout << "Got an array of " << reply->elements.size() << " elements\n";
         for (auto& el : reply->elements) {
             PrintReply(el.get());
@@ -30,7 +33,7 @@ int main()
 {
 
     try {
-        rediscpp::RedisInterface redis("localhost", "6379");
+        RedisInterface redis("localhost", "6379");
 
         for (int i = 0; i < 100000; i++)
         {
